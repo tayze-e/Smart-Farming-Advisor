@@ -1,0 +1,50 @@
+{
+  "maize": {
+    "display_name": "Maize",
+    "planting_months": [3, 4, 5, 8, 9],
+    "water_needs_mm_per_week": 25,
+    "growing_period_days": 100,
+    "ideal_temp_min_c": 18,
+    "ideal_temp_max_c": 32,
+    "common_pests": ["fall armyworm", "stem borer"],
+    "common_diseases": ["maize streak virus", "leaf blight"],
+    "drought_sensitive": true,
+    "heat_sensitive": false
+  },
+  "cassava": {
+    "display_name": "Cassava",
+    "planting_months": [3, 4, 5, 6, 9, 10],
+    "water_needs_mm_per_week": 15,
+    "growing_period_days": 300,
+    "ideal_temp_min_c": 20,
+    "ideal_temp_max_c": 35,
+    "common_pests": ["cassava mealybug", "whitefly"],
+    "common_diseases": ["cassava mosaic disease", "bacterial blight"],
+    "drought_sensitive": false,
+    "heat_sensitive": false
+  },
+  "tomato": {
+    "display_name": "Tomato",
+    "planting_months": [1, 2, 9, 10, 11],
+    "water_needs_mm_per_week": 30,
+    "growing_period_days": 80,
+    "ideal_temp_min_c": 18,
+    "ideal_temp_max_c": 27,
+    "common_pests": ["tomato fruitworm", "whitefly", "aphids"],
+    "common_diseases": ["early blight", "bacterial wilt"],
+    "drought_sensitive": true,
+    "heat_sensitive": true
+  },
+  "rice": {
+    "display_name": "Rice",
+    "planting_months": [4, 5, 6, 7],
+    "water_needs_mm_per_week": 50,
+    "growing_period_days": 120,
+    "ideal_temp_min_c": 20,
+    "ideal_temp_max_c": 35,
+    "common_pests": ["rice stem borer", "brown planthopper"],
+    "common_diseases": ["rice blast", "bacterial leaf blight"],
+    "drought_sensitive": true,
+    "heat_sensitive": false
+  }
+}
