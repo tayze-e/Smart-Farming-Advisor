@@ -32,15 +32,33 @@ from utils.logger_setup import setup_logger
 logger = setup_logger(__name__)
 
 st.set_page_config(page_title="Smart Farming & Crop Planting Advisor", page_icon="🌾")
+
+# A deliberate heading size scale for the whole app, replacing
+# Streamlit's defaults. Two problems this solves:
+# 1. The title was wrapping onto multiple lines even on a normal
+#    desktop window, since Streamlit's default title size is larger
+#    than needed for this much text.
+# 2. Section headers (st.header(), e.g. "Add a Farm Plot") default to
+#    a size close to the title's -- so shrinking ONLY the title (an
+#    earlier version of this fix) could make section headers look
+#    BIGGER than the title on narrow screens: backwards hierarchy.
+#    Sizing every heading level together, keeping the same size
+#    relationship at both rules below, avoids that at every width.
 st.markdown("""
-    <style>
-        @media (max-width: 640px) {
-            h1 {
-                font-size: 1.6rem !important;
-                line-height: 1.3 !important;
-            }
-        }
-    </style>
+<style>
+    /* Base sizes -- apply at every screen width */
+    h1 { font-size: 1.85rem !important; line-height: 1.25 !important; }
+    h2 { font-size: 1.4rem !important; }
+    h3 { font-size: 1.1rem !important; }
+
+    /* Mobile: scale every level down further, keeping the same
+       h1 > h2 > h3 proportions so the hierarchy never inverts. */
+    @media (max-width: 640px) {
+        h1 { font-size: 1.4rem !important; line-height: 1.3 !important; }
+        h2 { font-size: 1.15rem !important; }
+        h3 { font-size: 1rem !important; }
+    }
+</style>
 """, unsafe_allow_html=True)
 
 
