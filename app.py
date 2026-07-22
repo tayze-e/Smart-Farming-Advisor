@@ -32,6 +32,16 @@ from utils.logger_setup import setup_logger
 logger = setup_logger(__name__)
 
 st.set_page_config(page_title="Smart Farming & Crop Planting Advisor", page_icon="🌾")
+st.markdown("""
+    <style>
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 1.6rem !important;
+                line-height: 1.3 !important;
+            }
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 
 def geocode_location(location_name: str) -> tuple:
