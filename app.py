@@ -26,7 +26,7 @@ from models.season_calendar import SeasonCalendar
 from services.weather_client import WeatherClient
 from services.planting_advisor import PlantingAdvisor
 from services.farm_log_store import FarmLogStore
-from utils.validators import validate_location_name
+from utils.validators import validate_location_name, validate_coordinates
 from utils.logger_setup import setup_logger
 
 logger = setup_logger(__name__)
@@ -64,9 +64,17 @@ st.markdown("""
 
 def geocode_location(location_name: str) -> tuple:
     """
-    Converts a place name (e.g. "Abuja") into (latitude, longitude)
+    Converts a place name (e.g. "Wuse") into (latitude, longitude)
     using Open-Meteo's free Geocoding API -- a different endpoint
     from the forecast API used in WeatherClient.
+
+    A ", Nigeria" suffix is added to every search automatically,
+    biasing results toward Nigerian places specifically. Without
+    this, a search has no location context at all, which makes it
+    easy to miss or mismatch smaller local place names -- Open-Meteo
+    doesn't currently offer a separate country-filter parameter, so
+    folding the country directly into the search text is the
+    practical way to bias results toward Nigeria.
 
     Exceptions are translated into the same built-in types
     WeatherClient uses (ConnectionError, TimeoutError, ValueError),
@@ -78,7 +86,12 @@ def geocode_location(location_name: str) -> tuple:
     try:
         response = requests.get(
             "https://geocoding-api.open-meteo.com/v1/search",
-            params={"name": location_name, "count": 1, "language": "en", "format": "json"},
+            params={
+                "name": f"{location_name}, Nigeria",
+                "count": 1,
+                "language": "en",
+                "format": "json",
+            },
             timeout=10,
         )
         response.raise_for_status()
@@ -93,6 +106,30 @@ def geocode_location(location_name: str) -> tuple:
     if not results:
         raise ValueError(f"Could not find a location matching '{location_name}'.")
     return results[0]["latitude"], results[0]["longitude"]
+
+
+def resolve_location(location_input: str) -> tuple:
+    """
+    Accepts EITHER coordinates (e.g. "9.0765, 7.3986") OR a place
+    name (e.g. "Wuse") in the same field, and returns
+    (latitude, longitude) either way.
+
+    Any input containing a digit is treated as an attempted
+    coordinate entry -- valid place names never contain digits (see
+    validate_location_name), so a badly-formed coordinate gets a
+    specific, direct error instead of a confusing "not a valid place
+    name" message. Anything else is geocoded as a place name.
+
+    This means even farmland with no formal name in any geocoding
+    database still works, as long as the coordinates are known --
+    e.g. from a phone's GPS, or by long-pressing a spot on Google
+    Maps.
+    """
+    if any(char.isdigit() for char in location_input):
+        return validate_coordinates(location_input)
+
+    clean_location = validate_location_name(location_input)
+    return geocode_location(clean_location)
 
 
 # --- Startup check: fail fast with a friendly message if the API key is missing ---
@@ -125,7 +162,10 @@ st.header("Add a Farm Plot")
 
 with st.form("new_plot_form"):
     plot_name = st.text_input("Plot name", placeholder="e.g. North Field")
-    location_input = st.text_input("Location", placeholder="e.g. Abuja")
+    location_input = st.text_input(
+        "Location",
+        placeholder="e.g. Wuse, Abuja  --  or coordinates: 9.0765, 7.3986",
+    )
     crop_choice = st.selectbox("Crop", SUPPORTED_CROPS)
     planting_date_input = st.date_input("Planting date", value=datetime.now())
     submitted = st.form_submit_button("Add Plot")
@@ -134,8 +174,7 @@ if submitted:
     try:
         if not plot_name or not plot_name.strip():
             raise ValueError("Plot name cannot be empty.")
-        clean_location = validate_location_name(location_input)
-        lat, lon = geocode_location(clean_location)
+        lat, lon = resolve_location(location_input)
 
         new_plot = FarmPlot(
             plot_name=plot_name.strip(),
@@ -148,7 +187,9 @@ if submitted:
         )
 
         st.session_state.plots.append(new_plot)
-        st.success(f"Added '{plot_name.strip()}' growing {crop_choice} at {clean_location}.")
+        st.success(
+            f"Added '{plot_name.strip()}' growing {crop_choice} at {lat:.4f}, {lon:.4f}."
+        )
         logger.info(f"Added new plot: {plot_name.strip()} ({crop_choice})")
 
     except ValueError as e:
