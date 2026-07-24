@@ -64,24 +64,41 @@ st.markdown("""
 
 def geocode_location(location_name: str) -> tuple:
     """
-    Converts a place name (e.g. "Wuse") into (latitude, longitude)
-    using Open-Meteo's free Geocoding API -- a different endpoint
-    from the forecast API used in WeatherClient.
+    Converts a place name (e.g. "Wuse") into (latitude, longitude).
 
-    A ", Nigeria" suffix is added to every search automatically,
-    biasing results toward Nigerian places specifically. Without
-    this, a search has no location context at all, which makes it
-    easy to miss or mismatch smaller local place names -- Open-Meteo
-    doesn't currently offer a separate country-filter parameter, so
-    folding the country directly into the search text is the
-    practical way to bias results toward Nigeria.
+    Tries Open-Meteo's Geocoding API first (fast, no rate limit),
+    and falls back to OpenStreetMap's Nominatim service if that
+    fails for ANY reason -- not found, timeout, or a service error.
+    Nominatim's data comes from community mapping efforts and tends
+    to have better coverage of smaller local places (neighborhoods
+    within a city) than Open-Meteo's dataset alone.
 
-    Exceptions are translated into the same built-in types
-    WeatherClient uses (ConnectionError, TimeoutError, ValueError),
-    so the rest of the app never needs to know the "requests"
-    library's specific exception types exist -- one consistent set
-    of exceptions to handle everywhere, regardless of which service
-    raised the problem.
+    This mirrors the same try-primary-then-fallback pattern already
+    used in PlantingAdvisor for Gemini, for the same reason: no
+    single free service is fully comprehensive on its own, and the
+    recovery action (try the backup) is the same regardless of
+    exactly why the primary failed.
+    """
+    try:
+        return _geocode_open_meteo(location_name)
+    except Exception as e:
+        logger.info(
+            f"Open-Meteo geocoding failed for '{location_name}' ({e}), "
+            "trying Nominatim"
+        )
+        return _geocode_nominatim(location_name)
+
+
+def _geocode_open_meteo(location_name: str) -> tuple:
+    """
+    Primary geocoding source. A ", Nigeria" suffix is added to the
+    search text to bias results toward Nigerian places, since
+    Open-Meteo doesn't offer a separate country-filter parameter.
+
+    Exceptions are translated into ConnectionError, TimeoutError, or
+    ValueError -- the same built-in types WeatherClient uses -- so
+    the rest of the app only ever deals with one consistent set of
+    exceptions, regardless of which service raised the problem.
     """
     try:
         response = requests.get(
@@ -96,16 +113,54 @@ def geocode_location(location_name: str) -> tuple:
         )
         response.raise_for_status()
     except requests.exceptions.Timeout:
+        raise TimeoutError("Open-Meteo took too long to respond.")
+    except requests.exceptions.ConnectionError:
+        raise ConnectionError("Could not reach Open-Meteo's location service.")
+    except requests.exceptions.HTTPError:
+        raise ValueError(f"Open-Meteo rejected the search for '{location_name}'.")
+
+    results = response.json().get("results")
+    if not results:
+        raise ValueError(f"Open-Meteo found no match for '{location_name}'.")
+    return results[0]["latitude"], results[0]["longitude"]
+
+
+def _geocode_nominatim(location_name: str) -> tuple:
+    """
+    Backup geocoding source (OpenStreetMap's Nominatim), used only
+    when Open-Meteo's search comes up empty. countrycodes="ng" is a
+    hard filter restricting results to Nigeria specifically. A
+    descriptive User-Agent header is required by Nominatim's usage
+    policy -- the default header Python's requests library sends
+    automatically isn't accepted.
+
+    Note: Nominatim returns lat/lon as TEXT strings, not numbers
+    (unlike Open-Meteo) -- float() conversion below handles that.
+    """
+    try:
+        response = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={
+                "q": location_name,
+                "countrycodes": "ng",
+                "format": "json",
+                "limit": 1,
+            },
+            headers={"User-Agent": "SmartFarmingAdvisor/1.0 (school project)"},
+            timeout=10,
+        )
+        response.raise_for_status()
+    except requests.exceptions.Timeout:
         raise TimeoutError("The location lookup service took too long to respond.")
     except requests.exceptions.ConnectionError:
         raise ConnectionError("Could not reach the location lookup service.")
     except requests.exceptions.HTTPError:
         raise ValueError(f"The location lookup service rejected '{location_name}'.")
 
-    results = response.json().get("results")
+    results = response.json()
     if not results:
-        raise ValueError(f"Could not find a location matching '{location_name}'.")
-    return results[0]["latitude"], results[0]["longitude"]
+        raise ValueError(f"Could not find a Nigerian location matching '{location_name}'.")
+    return float(results[0]["lat"]), float(results[0]["lon"])
 
 
 def resolve_location(location_input: str) -> tuple:
