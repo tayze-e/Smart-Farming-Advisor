@@ -4,7 +4,7 @@ A Python + Streamlit application that gives farmers AI-powered planting advice b
 
 ## Features
 
-- Enter a location and crop (maize, cassava, tomato, or rice) to get planting advice
+- Enter a givn location and crop (maize, cassava, tomato, or rice) to get planting advice
 - Fetches live weather forecasts (rainfall, temperature, soil moisture) from the Open-Meteo API
 - AI-generated planting advice via the Gemini API, combining crop knowledge with live weather
 - Automatic rule-based fallback advice if the Gemini API is unavailable
@@ -13,7 +13,7 @@ A Python + Streamlit application that gives farmers AI-powered planting advice b
 - Lets users log planting dates and activities (watering, weeding, etc.) per farm plot
 - Saves and loads farm plots to a local JSON file
 
-## Tech Stack
+# Tech Stack
 
 - Python
 - Streamlit (UI)
