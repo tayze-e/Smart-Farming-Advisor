@@ -12,7 +12,7 @@ if GEMINI_API_KEY and GEMINI_API_KEY != "your_gemini_api_key_here":
 else:
     print("[FAIL] API key not found - check your .env file")
 
-# Test 2: confirm logging works
+# Test 2: confirm that logging works
 logger = setup_logger("test")
 logger.info("Logger test successful")
 print("[OK] Check logs/app.log - it should now contain a log entry")
