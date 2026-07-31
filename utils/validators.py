@@ -1,6 +1,8 @@
 """
 utils/validators.py
 
+Contributed by: Nathan (nathanojaobochi234)
+
 Purpose:
 Contains regex-based functions that check user input is well-formed
 before we try to use it -- coordinates, location names, numeric
