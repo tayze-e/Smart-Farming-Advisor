@@ -1,6 +1,8 @@
 """
 utils/logger_setup.py
 
+Contributed by: Nathan (nathanojaobochi234)
+
 Purpose:
 Sets up a consistent logging system for the whole application, so
 every class (WeatherClient, PlantingAdvisor, FarmLogStore, etc.) can
