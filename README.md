@@ -59,7 +59,7 @@ Get a free key at [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 > **No Gemini key?** The app still works — it automatically falls back to rule-based advice when the key is missing or invalid.
 
-### 4. Run the app
+### 4. Running the app
 ```bash
 python -m streamlit run app.py
 ```
@@ -112,7 +112,7 @@ Smart-Farming-Advisor/
 ## 💡 Python Concepts Demonstrated
 
 - **Object-Oriented Programming (OOP)** — six domain classes (`Crop`, `FarmPlot`, `SeasonCalendar`, `WeatherClient`, `PlantingAdvisor`, `FarmLogStore`) with `@classmethod` factory constructors and `__repr__`
-- **Exception Handling** — structured try/except blocks translate API and network errors into clean user-facing messages; broad catch in the advisor ensures graceful fallback
+- **Exception Handling** — allows structured try/except blocks translate API and network errors into clean user-facing messages; broad catch in the advisor ensures graceful fallback
 - **File Handling** — JSON read/write for the crop knowledge base and saved plot data; `with open(...)` context managers throughout
 - **Regular Expressions** — pre-compiled patterns (`re.compile`) validate coordinates, location names, and dates before any processing
 
@@ -121,3 +121,5 @@ Smart-Farming-Advisor/
 ## 📄 Documentation
 
 A full technical report (`Full_Codebase_Exposition.pdf`) is included in this repository. It covers every file, every function, and every design decision in plain language — suitable for presentations and code reviews.
+
+### End of README file
